@@ -1,0 +1,16 @@
+apply plugin: 'java'
+
+sourceSets {
+	main.java.srcDirs = ['src']
+}
+
+repositories {
+	jcenter()
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+	implementation 'net.java.dev.jna:jna:5.2.0'
+	implementation 'net.java.dev.jna:jna-platform:5.2.0'
+}
