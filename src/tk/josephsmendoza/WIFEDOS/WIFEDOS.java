@@ -10,7 +10,7 @@ import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinReg;
 
-public class WIFEODS {
+public class WIFEDOS {
 
     public static final ExecutorService executorService = Executors.newCachedThreadPool();
     private static final String WIFEO = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\";

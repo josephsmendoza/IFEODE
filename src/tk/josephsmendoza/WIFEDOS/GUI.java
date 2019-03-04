@@ -86,8 +86,8 @@ public class GUI extends JFrame{
     private Component getDebuggerView() {
 	JPanel debuggerView=new JPanel();
 	debuggerView.setLayout(new BoxLayout(debuggerView,BoxLayout.Y_AXIS));
-	for(String key:WIFEODS.getReg().keySet()) {
-	    debuggerView.add(getItemView(WIFEODS.getReg().get(key)));
+	for(String key:WIFEDOS.getReg().keySet()) {
+	    debuggerView.add(getItemView(WIFEDOS.getReg().get(key)));
 	}
 	return debuggerView;
     }
@@ -99,7 +99,7 @@ public class GUI extends JFrame{
     private JPanel getKeyView() {
 	JPanel keyView=new JPanel();
 	keyView.setLayout(new BoxLayout(keyView,BoxLayout.Y_AXIS));
-	for(String key:WIFEODS.getReg().keySet()) {
+	for(String key:WIFEDOS.getReg().keySet()) {
 	    keyView.add(getItemView(key));
 	}
 	return keyView;
