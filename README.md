@@ -1,7 +1,7 @@
 # IFEODE
 Image File Execution Options Debugger Extender, a program for replacing Windows programs
 ## Goal
-This program will extend the IFEO Debugger system to allow replacing any windows program without modifying/moving it.
+This program will extend the IFEO Debugger system to allow replacing any windows program in-place
 ## Satus
 Command line version completed
 ## Releases
