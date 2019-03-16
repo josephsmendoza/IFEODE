@@ -13,5 +13,5 @@ repositories {
 dependencies {
 	implementation 'net.java.dev.jna:jna:5.2.0'
 	implementation 'net.java.dev.jna:jna-platform:5.2.0'
-	implementation 'args4j:args4j:2.33'
+	implementation 'info.picocli:picocli:3.9.5'
 }

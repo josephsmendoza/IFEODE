@@ -1,6 +1,8 @@
-# WIFEDOS
-Windows Image File Execution Debugger Option Setter, a GUI allowing you to replace any program on your system with another
+# IFEODE
+Image File Execution Options Debugger Extender, a program for replacing Windows programs
 ## Goal
-This program will allow any computer-literate person to replace one program with another
+This program will extend the IFEO Debugger system to allow replacing any windows program without modifying/moving it.
 ## Satus
-Implementation - No ETA
+Command line version completed
+## Releases
+Installers will be made availible on the [releases page](https://github.com/josephsmendoza/WIFEDOS/releases)
