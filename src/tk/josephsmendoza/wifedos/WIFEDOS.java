@@ -6,10 +6,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Formatter;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
@@ -44,29 +49,38 @@ public class WIFEDOS implements Serializable, Runnable {
     @Option(name = "-d", usage = "Use default IFEO behaviour. All optional args are ignored")
     private boolean direct = false;
     @Option(name = "-h", usage = "Show this help text. All other args are ignored")
-    private boolean help = false;
+    private boolean help;
+    @Option(name = "-s", usage = "Show current bindings. No other args required, but can be used together")
+    private boolean showBinds;
 
     public static void main(String[] args) {
+	LogManager.getLogManager().reset();
+	log.addHandler(new StreamHandler(System.out, new Formatter() {
+
+	    @Override
+	    public String format(LogRecord record) {
+		return record.getMessage() + "\n";
+	    }
+
+	}));
 	WIFEDOS wifedos = new WIFEDOS();
 	CmdLineParser parser = new CmdLineParser(wifedos);
 	try {
 	    parser.parseArgument(args);
 	} catch (Exception e) {
-	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    parser.printUsage(baos);
 	    errOut("Exception during argument parsing", e.getMessage());
 	}
 	if (wifedos.help) {
 	    ByteArrayOutputStream boas = new ByteArrayOutputStream();
 	    parser.printUsage(boas);
-	    String help = "\n" + new String(boas.toByteArray());
+	    String help = new String(boas.toByteArray());
 	    log.info(help);
 	    System.exit(0);
 	}
 	if (!extraCliArgs.isEmpty()) {
 	    errOut("Extra args", extraCliArgs.toString());
 	}
-	if (wifedos.oldProg == null || wifedos.newProg == null) {
+	if ((wifedos.oldProg == null || wifedos.newProg == null) && !wifedos.showBinds) {
 	    errOut("Missing args");
 	}
 	wifedos.run();
@@ -83,39 +97,57 @@ public class WIFEDOS implements Serializable, Runnable {
     public void run() {
 	// Get the list of IFEO keys
 	List<String> keys = Arrays.asList(Advapi32Util.registryGetKeys(WinReg.HKEY_LOCAL_MACHINE, IFEO));
-	// If oldProg does not have an IFEO key, make one
-	if (!keys.contains(oldProg)) {
-	    Advapi32Util.registryCreateKey(WinReg.HKEY_LOCAL_MACHINE, IFEO, oldProg);
-	}
-	// In direct mode, just set the IFEO Debugger to newProg and exit
-	if (direct) {
-	    Advapi32Util.registrySetStringValue(WinReg.HKEY_LOCAL_MACHINE, IFEO + oldProg, DO, newProg);
-	    return;
-	}
-	// In indirect mode, set the IFEO Debugger to the WIFEDOS handler
-	Advapi32Util.registrySetStringValue(WinReg.HKEY_LOCAL_MACHINE, IFEO + oldProg, DO, WIFEDOH);
-	// if it's enabled, pass the full oldProg command to newProg
-	if (passArgs) {
-	    newProg += ARGS;
-	}
-	// add any extra args to the end of the command
-	if (extraArgs != null) {
-	    newProg += " " + extraArgs;
-	}
-	// write config to global location
-	File f = new File(GLOBALDOH + oldProg + TXT);
-	f.mkdirs();
-	if (f.exists()) {
-	    try {
-		Files.delete(f.toPath());
-	    } catch (IOException e) {
-		errOut("Exception while deleting old config", e.getMessage());
+	if (oldProg != null && newProg != null) {
+	    // If oldProg does not have an IFEO key, make one
+	    if (!keys.contains(oldProg)) {
+		Advapi32Util.registryCreateKey(WinReg.HKEY_LOCAL_MACHINE, IFEO, oldProg);
+	    }
+	    if (direct) {
+		// In direct mode, set the IFEO Debugger to newProg
+		Advapi32Util.registrySetStringValue(WinReg.HKEY_LOCAL_MACHINE, IFEO + oldProg, DO, newProg);
+	    } else {
+		// In indirect mode, set the IFEO Debugger to the WIFEDOS handler
+		Advapi32Util.registrySetStringValue(WinReg.HKEY_LOCAL_MACHINE, IFEO + oldProg, DO, WIFEDOH);
+		// if it's enabled, pass the full oldProg command to newProg
+		if (passArgs) {
+		    newProg += ARGS;
+		}
+		// add any extra args to the end of the command
+		if (extraArgs != null) {
+		    newProg += " " + extraArgs;
+		}
+		// write config to global location
+		File f = new File(GLOBALDOH + oldProg + TXT);
+		f.mkdirs();
+		if (f.exists()) {
+		    try {
+			Files.delete(f.toPath());
+		    } catch (IOException e) {
+			errOut("Exception while deleting old config", e.getMessage());
+		    }
+		}
+		try (FileWriter fw = new FileWriter(f)) { // write new command
+		    fw.write(newProg);
+		} catch (Exception e) {
+		    errOut("Exception while writing new config", e.getMessage());
+		}
 	    }
 	}
-	try (FileWriter fw = new FileWriter(f)) { // write new command
-	    fw.write(newProg);
-	} catch (Exception e) {
-	    errOut("Exception while writing new config", e.getMessage());
+	if (showBinds) {
+	    for (String key : keys) {
+		if (Advapi32Util.registryValueExists(WinReg.HKEY_LOCAL_MACHINE, IFEO + key, DO)) {
+		    log.info(key);
+		    String val = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, IFEO + key, DO);
+		    log.info(val);
+		    if (val.equals(WIFEDOH)) {
+			try {
+			    log.info(new String(Files.readAllBytes(Paths.get(GLOBALDOH + key + TXT))));
+			} catch (IOException e) {
+			    log.severe(e.getMessage());
+			}
+		    }
+		}
+	    }
 	}
     }
 }
