@@ -14,4 +14,5 @@ dependencies {
 	implementation 'net.java.dev.jna:jna:5.2.0'
 	implementation 'net.java.dev.jna:jna-platform:5.2.0'
 	implementation 'info.picocli:picocli:3.9.5'
+	implementation 'com.github.vatbub:mslinks:1.0.5'
 }
